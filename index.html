@@ -157,6 +157,15 @@
 <script>
 // ===== DATA =====
 const TEAMS_DATA = [
+  {num:85,nom:"Jam",tournoi:"Tournoi féminin",coeff:12,joueurs:[{nom:"Rougeot Amélie",niv:"Régional"},{nom:"Niel Joanne",niv:"Régional"},{nom:"Delporte Miti",niv:"Régional"}]},
+  {num:84,nom:"Mashallah l'équipe",tournoi:"Élite masculin",coeff:16,joueurs:[{nom:"Marka Noah",niv:"National"},{nom:"Martino Noah",niv:"National"},{nom:"Caselli Mathis",niv:"National"}]},
+  {num:83,nom:"BDH",tournoi:"Tournoi féminin",coeff:17.33,joueurs:[{nom:"Bonnier Anaé",niv:"PRO/CFC"},{nom:"Laurent Sarah",niv:"PRO/CFC"},{nom:"Niel Ella",niv:"National"}]},
+  {num:82,nom:"Les Goulous Fanfarinets",tournoi:"Tournoi mixte",coeff:9.33,joueurs:[{nom:"Perrin Noé",niv:"Régional"},{nom:"Abiven Amélie",niv:"Loisir"},{nom:"Lejeune Marine",niv:"Loisir"}]},
+  {num:81,nom:"Les survivants",tournoi:"Tournoi mixte",coeff:13.33,joueurs:[{nom:"Metge Logan",niv:"National"},{nom:"Patte Lila",niv:"Régional"},{nom:"Fourny Loris",niv:"Régional"}]},
+  {num:80,nom:"Bom dia dembele",tournoi:"Loisir masculin",coeff:10.67,joueurs:[{nom:"Charnelet Maxim",niv:"Loisir"},{nom:"Doyon Mateo",niv:"Régional"},{nom:"Magos Constantin",niv:"Régional"}]},
+  {num:79,nom:"Désiré pas doué",tournoi:"Loisir masculin",coeff:10,joueurs:[{nom:"Martinez Quentin",niv:"Départemental"},{nom:"Martinez Evan",niv:"Départemental"},{nom:"Legueux Pâris",niv:"Départemental"}]},
+  {num:78,nom:"Boutboutland",tournoi:"Élite masculin",coeff:18,joueurs:[{nom:"Almarcha Bastien",niv:"PRO/CFC"},{nom:"Lebal Dario",niv:"PRO/CFC"},{nom:"Amilhat Achille",niv:"PRO/CFC"}]},
+  {num:77,nom:"raf baddies",tournoi:"Tournoi mixte",coeff:12,joueurs:[{nom:"Barrap Raphael",niv:"Régional"},{nom:"Katar Rania",niv:"Régional"},{nom:"Ruiz Betis Lucile",niv:"Régional"}]},
   {num:76,nom:"À la ramasse",tournoi:"Tournoi mixte",coeff:12,joueurs:[{nom:"Zoé Lefrançois",niv:"Régional"},{nom:"Terme Antoine",niv:"Régional"},{nom:"Eva Laurent",niv:"Régional"}]},
   {num:75,nom:"mat performance",tournoi:"Tournoi mixte",coeff:13.33,joueurs:[{nom:"Malo",niv:"National"},{nom:"Rose",niv:"Régional"},{nom:"Théo",niv:"Régional"}]},
   {num:74,nom:"On cherche un troisième",tournoi:"Tournoi mixte",coeff:12,joueurs:[{nom:"Clastres Melina",niv:"Régional"},{nom:"Castaldo lenny",niv:"Régional"},{nom:"Mozet diego",niv:"Régional"}]},
@@ -213,7 +222,7 @@ const TEAMS_DATA = [
   {num:23,nom:"Gros biberon",tournoi:"Tournoi mixte",coeff:16,joueurs:[{nom:"Demarque Simon",niv:"National"},{nom:"Manresa loelia",niv:"National"},{nom:"Rasovski Bob",niv:"National"}]},
   {num:22,nom:"Soliiiide",tournoi:"Tournoi mixte",coeff:16,joueurs:[{nom:"Zerbib Simon",niv:"National"},{nom:"Nadir",niv:"National"},{nom:"Marine revel",niv:"National"}]},
   {num:21,nom:"Aura farming",tournoi:"Élite masculin",coeff:16.67,joueurs:[{nom:"Vincent-Nguyen",niv:"National"},{nom:"Simon piffeteau",niv:"PRO/CFC"},{nom:"Loris canonge",niv:"National"}]},
-  {num:20,nom:"Mas gonflate",tournoi:"Tournoi mixte",coeff:16,joueurs:[{nom:"Enio",niv:"PRO/CFC"},{nom:"Puig Titouan",niv:"PRO/CFC"},{nom:"Rossi elea",niv:"Régional"}]},
+  {num:20,nom:"Mas gonflate",tournoi:"Tournoi mixte",coeff:16,joueurs:[{nom:"Rossi Enio",niv:"PRO/CFC"},{nom:"Puig Titouan",niv:"PRO/CFC"},{nom:"Rossi elea",niv:"Régional"}]},
   {num:19,nom:"Nana et les 2 autres",tournoi:"Tournoi mixte",coeff:12,joueurs:[{nom:"VILLARET  Loui",niv:"Régional"},{nom:"RUDEL Alex",niv:"Régional"},{nom:"FESQUET Anais",niv:"Régional"}]},
   {num:18,nom:"Triple alliance",tournoi:"Tournoi féminin",coeff:14.67,joueurs:[{nom:"Malory",niv:"Régional"},{nom:"Candice",niv:"National"},{nom:"Lou-Ann",niv:"National"}]},
   {num:17,nom:"Tanga",tournoi:"Loisir masculin",coeff:12,joueurs:[{nom:"MALHERBE Titouan",niv:"Régional"},{nom:"MAUREL Baptiste",niv:"Régional"},{nom:"GENDAZIK Sacha",niv:"Régional"}]},
@@ -408,7 +417,11 @@ function renderPhase1View(T) {
       var rankCls=['r1','r2','r3','rn','rn'];
 
       html += '<div class="poule-block">';
+      var terrainPoule = state.poules[T+'_phase1_'+pKey+'_terrain']||'';
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
       html += '<div class="poule-title">POULE ' + idx + '</div>';
+      if(terrainPoule) html += '<span style="font-size:12px;font-weight:700;background:#f0fdf4;color:#14532d;padding:4px 10px;border-radius:10px;border:1px solid #a7f3d0">🏟️ Terrain ' + terrainPoule + '</span>';
+      html += '</div>';
 
       // Matchs
       var hasMatches = false;
@@ -476,7 +489,12 @@ function renderElimView(T, ph) {
         var standings=computeStandings(T,ph+'_'+pKey,size,true);
         var rankCls=['r1','r2','r3','rn','rn'];
 
-        html += '<div class="poule-block"><div class="poule-title">POULE '+idx+'</div>';
+        html += '<div class="poule-block">';
+        var terrainElim = state.poules[T+'_'+ph+'_'+pKey+'_terrain']||'';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
+        html += '<div class="poule-title">POULE '+idx+'</div>';
+        if(terrainElim) html += '<span style="font-size:12px;font-weight:700;background:#f0fdf4;color:#14532d;padding:4px 10px;border-radius:10px;border:1px solid #a7f3d0">🏟️ Terrain ' + terrainElim + '</span>';
+        html += '</div>';
         pairs.forEach(function(pair,mi){
           var sc=state.scores[prefix+'_m'+mi]||{home:'',away:''};
           var tA=getTeamByNum(parseInt(state.poules[prefix+'_'+pair[0]]));
@@ -526,10 +544,13 @@ function renderElimView(T, ph) {
       var t1 = getTeamByNum(t1num);
       var t2 = getTeamByNum(t2num);
       var winner = getTeamByNum(winnum);
+      var kt = T+'_'+ph+'_br_terrain_'+mi;
+      var terrainMatch = state.poules[kt]||'';
       if(!t1 && !t2) continue;
       hasAnyMatch = true;
       var played = !!winner;
       roundHtml += '<div class="bracket-match '+(played?'played':'')+'">';
+      if(terrainMatch) roundHtml += '<div style="font-size:10px;font-weight:700;background:#f0fdf4;color:#14532d;padding:3px 8px;border-radius:8px;margin-bottom:6px;display:inline-block">🏟️ Terrain ' + terrainMatch + '</div>';
       roundHtml += '<div class="bracket-team '+(winner&&t1&&winner.num===t1.num?'winner':'')+'">';
       roundHtml += '<span>'+(t1?t1.nom.substring(0,22):'<span class="tbd">À déterminer</span>')+'</span>';
       roundHtml += '</div>';
