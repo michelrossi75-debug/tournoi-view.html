@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>🏐 Green Arago 2026 — Live</title>
+<style>
+  :root {
+    --green:#16a34a; --green-dark:#14532d; --green-pale:#dcfce7;
+    --bg:#f0fdf4; --card:#ffffff; --text:#111827; --muted:#6b7280; --border:#d1fae5;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; max-width:480px; margin:0 auto; }
+
+  .header { background:linear-gradient(135deg,var(--green-dark),var(--green)); color:white; padding:18px 20px 14px; position:sticky; top:0; z-index:100; box-shadow:0 2px 20px rgba(0,0,0,0.2); }
+  .header-title { font-size:17px; font-weight:800; }
+  .header-sub { font-size:12px; opacity:0.85; margin-top:3px; display:flex; align-items:center; gap:6px; }
+  .live-dot { width:8px; height:8px; border-radius:50%; background:#86efac; animation:pulse 2s infinite; flex-shrink:0; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .nav { display:flex; background:white; border-bottom:2px solid var(--border); overflow-x:auto; scrollbar-width:none; position:sticky; top:64px; z-index:99; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+  .nav::-webkit-scrollbar { display:none; }
+  .nav-btn { flex:0 0 auto; padding:11px 14px; font-size:12px; font-weight:700; color:var(--muted); cursor:pointer; border:none; background:none; border-bottom:3px solid transparent; white-space:nowrap; }
+  .nav-btn.active { color:var(--green); border-bottom-color:var(--green); }
+
+  .main { padding:14px; padding-bottom:30px; }
+  .page { display:none; }
+  .page.active { display:block; }
+
+  .card { background:white; border-radius:16px; padding:14px; margin-bottom:12px; box-shadow:0 4px 16px rgba(22,163,74,0.08); border:1px solid var(--border); }
+  .card-title { font-size:14px; font-weight:700; color:var(--green-dark); margin-bottom:12px; }
+
+  /* TOURNOI SELECTOR */
+  .t-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+  .t-btn { background:white; border:2px solid var(--border); border-radius:14px; padding:14px 10px; text-align:center; cursor:pointer; font-size:12px; font-weight:700; transition:all 0.2s; }
+  .t-btn .emoji { font-size:22px; display:block; margin-bottom:5px; }
+  .t-btn.active { border-color:currentColor; }
+  .t-btn.jeunes { color:#2563eb; } .t-btn.jeunes.active { background:#eff6ff; }
+  .t-btn.mixte  { color:#ea580c; } .t-btn.mixte.active  { background:#fff7ed; }
+  .t-btn.feminin{ color:#db2777; } .t-btn.feminin.active { background:#fdf2f8; }
+  .t-btn.loisir { color:#2563eb; } .t-btn.loisir.active  { background:#eff6ff; }
+  .t-btn.elite  { color:#7c3aed; } .t-btn.elite.active   { background:#f5f3ff; }
+
+  /* PHASE TABS */
+  .phase-tabs { display:flex; gap:8px; margin-bottom:14px; overflow-x:auto; scrollbar-width:none; }
+  .phase-tabs::-webkit-scrollbar { display:none; }
+  .phase-tab { flex:0 0 auto; padding:7px 14px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:2px solid var(--border); background:white; color:var(--muted); }
+  .phase-tab.active { background:var(--green); border-color:var(--green); color:white; }
+
+  /* POULE */
+  .poule-block { margin-bottom:20px; border-top:2px solid var(--border); padding-top:14px; }
+  .poule-title { font-size:14px; font-weight:800; color:var(--green-dark); margin-bottom:10px; }
+
+  /* MATCH ROW */
+  .match-row { display:flex; align-items:center; gap:8px; padding:9px 0; border-bottom:1px solid #f9fafb; font-size:13px; }
+  .match-row:last-child { border-bottom:none; }
+  .match-teams { flex:1; }
+  .match-name { font-weight:600; }
+  .match-name.winner { color:var(--green); font-weight:800; }
+  .score-badge { font-size:16px; font-weight:800; min-width:28px; text-align:center; }
+  .score-sep { color:var(--muted); font-weight:700; }
+  .pending { font-size:11px; color:var(--muted); font-style:italic; }
+
+  /* CLASSEMENT */
+  .rank-table { width:100%; border-collapse:collapse; font-size:12px; margin-top:10px; }
+  .rank-table th { padding:6px 4px; color:var(--muted); font-size:10px; font-weight:700; text-transform:uppercase; border-bottom:1px solid var(--border); text-align:left; }
+  .rank-table td { padding:8px 4px; border-bottom:1px solid #f9fafb; vertical-align:middle; }
+  .rank-badge { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; font-size:11px; font-weight:800; }
+  .r1 { background:#fef3c7; color:#92400e; }
+  .r2 { background:#f3f4f6; color:#374151; }
+  .r3 { background:#fee2e2; color:#991b1b; }
+  .rn { background:#f9fafb; color:var(--muted); }
+
+  /* BRACKET */
+  .round-title { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; color:var(--muted); text-align:center; margin:14px 0 10px; display:flex; align-items:center; gap:8px; }
+  .round-title::before,.round-title::after { content:''; flex:1; height:1px; background:var(--border); }
+  .bracket-match { background:white; border:1.5px solid var(--border); border-radius:12px; padding:10px 12px; margin-bottom:8px; }
+  .bracket-match.played { border-color:#a7f3d0; }
+  .bracket-team { display:flex; align-items:center; gap:8px; padding:5px 0; font-size:13px; font-weight:600; }
+  .bracket-team + .bracket-team { border-top:1px solid #f3f4f6; }
+  .bracket-team.winner { color:var(--green); font-weight:800; }
+  .bracket-score { margin-left:auto; font-size:15px; font-weight:800; min-width:24px; text-align:right; }
+  .tbd { color:var(--muted); font-style:italic; font-weight:400; font-size:12px; }
+
+  /* CHAMPION */
+  .champion { background:linear-gradient(135deg,#fef3c7,#fde68a); border:2px solid #f59e0b; border-radius:18px; padding:20px; text-align:center; margin-top:8px; }
+  .champion .trophy { font-size:40px; }
+  .champion .label { font-size:11px; font-weight:800; color:#78350f; text-transform:uppercase; letter-spacing:1px; margin-top:8px; }
+  .champion .name { font-size:19px; font-weight:800; color:#92400e; margin-top:6px; }
+
+  /* EQUIPES */
+  .team-card { background:white; border-radius:12px; padding:12px 14px; margin-bottom:8px; border:1.5px solid var(--border); }
+  .team-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:6px; }
+  .team-name { font-size:14px; font-weight:700; }
+  .team-num { font-size:11px; color:var(--muted); }
+  .t-tag { font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px; }
+  .player { font-size:12px; color:#374151; padding:2px 0; display:flex; align-items:center; gap:6px; }
+  .player::before { content:'•'; color:var(--green); }
+  .lv { font-size:10px; font-weight:600; padding:1px 6px; border-radius:8px; background:#f3f4f6; color:var(--muted); margin-left:auto; }
+  .lv-pro { background:#fef3c7; color:#92400e; }
+  .lv-nat { background:#dcfce7; color:#166534; }
+  .lv-reg { background:#dbeafe; color:#1d4ed8; }
+  .lv-dep { background:#ede9fe; color:#6d28d9; }
+
+  /* SEARCH */
+  .search-input { width:100%; border:1.5px solid var(--border); border-radius:12px; padding:10px 14px; font-size:14px; background:white; margin-bottom:12px; }
+  .search-input:focus { outline:none; border-color:var(--green); }
+
+  /* EMPTY */
+  .empty { text-align:center; padding:40px 20px; color:var(--muted); font-size:14px; }
+  .empty .big { font-size:40px; margin-bottom:10px; }
+
+  /* REFRESH */
+  .refresh-bar { display:flex; align-items:center; justify-content:space-between; font-size:11px; color:var(--muted); margin-bottom:10px; }
+  .refresh-btn { background:var(--green-pale); border:none; border-radius:8px; padding:5px 10px; font-size:11px; font-weight:600; color:var(--green-dark); cursor:pointer; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">🏐 Green Arago 2026 — Live</div>
+  <div class="header-sub">
+    <div class="live-dot" id="liveDot"></div>
+    <span id="headerSub">Chargement...</span>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="showPage('tournois')" id="btn-tournois">🏆 Tournois</button>
+  <button class="nav-btn" onclick="showPage('equipes')" id="btn-equipes">📋 Équipes</button>
+</div>
+
+<div class="main">
+
+  <!-- TOURNOIS -->
+  <div class="page active" id="page-tournois">
+    <div class="t-grid">
+      <button class="t-btn jeunes" onclick="selectT('jeunes')"><span class="emoji">🔵</span>Jeunes</button>
+      <button class="t-btn mixte"  onclick="selectT('mixte')"><span class="emoji">🟠</span>Mixte</button>
+      <button class="t-btn feminin" onclick="selectT('feminin')"><span class="emoji">🌸</span>Féminin</button>
+      <button class="t-btn loisir" onclick="selectT('loisir')"><span class="emoji">🔵</span>Loisir M.</button>
+      <button class="t-btn elite"  onclick="selectT('elite')"><span class="emoji">⭐</span>Élite M.</button>
+    </div>
+    <div id="tournoiContent"></div>
+  </div>
+
+  <!-- EQUIPES -->
+  <div class="page" id="page-equipes">
+    <input class="search-input" type="text" placeholder="🔍 Rechercher une équipe ou un joueur..." id="searchInput" oninput="renderEquipes()">
+    <div id="equipesContent"></div>
+  </div>
+
+</div>
+
+<script>
+// ===== DATA =====
+const TEAMS_DATA = [
+  {num:85,nom:"Jam",tournoi:"Tournoi féminin",coeff:12,joueurs:[{nom:"Rougeot Amélie",niv:"Régional"},{nom:"Niel Joanne",niv:"Régional"},{nom:"Delporte Miti",niv:"Régional"}]},
+  {num:84,nom:"Mashallah l'équipe",tournoi:"Élite masculin",coeff:16,joueurs:[{nom:"Marka Noah",niv:"National"},{nom:"Martino Noah",niv:"National"},{nom:"Caselli Mathis",niv:"National"}]},
+  {num:83,nom:"BDH",tournoi:"Tournoi féminin",coeff:17.33,joueurs:[{nom:"Bonnier Anaé",niv:"PRO/CFC"},{nom:"Laurent Sarah",niv:"PRO/CFC"},{nom:"Niel Ella",niv:"National"}]},
+  {num:82,nom:"Les Goulous Fanfarinets",tournoi:"Tournoi mixte",coeff:9.33,joueurs:[{nom:"Perrin Noé",niv:"Régional"},{nom:"Abiven Amélie",niv:"Loisir"},{nom:"Lejeune Marine",niv:"Loisir"}]},
+  {num:81,nom:"Les survivants",tournoi:"Tournoi mixte",coeff:13.33,joueurs:[{nom:"Metge Logan",niv:"National"},{nom:"Patte Lila",niv:"Régional"},{nom:"Fourny Loris",niv:"Régional"}]},
+  {num:80,nom:"Bom dia dembele",tournoi:"Loisir masculin",coeff:10.67,joueurs:[{nom:"Charnelet Maxim",niv:"Loisir"},{nom:"Doyon Mateo",niv:"Régional"},{nom:"Magos Constantin",niv:"Régional"}]},
+  {num:79,nom:"Désiré pas doué",tournoi:"Loisir masculin",coeff:10,joueurs:[{nom:"Martinez Quentin",niv:"Départemental"},{nom:"Martinez Evan",niv:"Départemental"},{nom:"Legueux Pâris",niv:"Départemental"}]},
+  {num:78,nom:"Boutboutland",tournoi:"Élite masculin",coeff:18,joueurs:[{nom:"Almarcha Bastien",niv:"PRO/CFC"},{nom:"Lebal Dario",niv:"PRO/CFC"},{nom:"Amilhat Achille",niv:"PRO/CFC"}]},
+  {num:77,nom:"raf baddies",tournoi:"Tournoi mixte",coeff:12,joueurs:[{nom:"Barrap Raphael",niv:"Régional"},{nom:"Katar Rania",niv:"Régional"},{nom:"Ruiz Betis Lucile",niv:"Régional"}]},
+  {num:76,nom:"À la ramasse",tournoi:"Tournoi mixte",coeff:12,joueurs:[{nom:"Zoé Lefrançois",niv:"Régional"},{nom:"Terme Antoine",niv:"Régional"},{nom:"Eva Laurent",niv:"Régional"}]},
+  {num:75,nom:"mat performance",tournoi:"Tournoi mixte",coeff:13.33,joueurs:[{nom:"Malo",niv:"National"},{nom:"Rose",niv:"Régional"},{nom:"Théo",niv:"Régional"}]},
+  {num:74,nom:"On cherche un troisième",tournoi:"Tournoi mixte",coeff:12,joueurs:[{nom:"Clastres Melina",niv:"Régional"},{nom:"Castaldo lenny",niv:"Régional"},{nom:"Mozet diego",niv:"Régional"}]},
+  {num:73,nom:"Pete moi le cul Sabou",tournoi:"Loisir masculin",coeff:8,joueurs:[{nom:"Caselli lorenzo",niv:"Loisir"},{nom:"Rassel Matthieu",niv:"Loisir"},{nom:"Dorlet Grégoire",niv:"Loisir"}]},
+  {num:72,nom:"Tout sur le block",tournoi:"Tournoi mixte",coeff:10.67,joueurs:[{nom:"Leny",niv:"Loisir"},{nom:"Islam",niv:"Régional"},{nom:"Aurelie",niv:"Régional"}]},
+  {num:71,nom:"Tom Tarik et Bamba",tournoi:"Élite masculin",coeff:18,joueurs:[{nom:"Liot tom",niv:"PRO/CFC"},{nom:"Ripert Tibo",niv:"PRO/CFC"},{nom:"Diop Cheikh",niv:"PRO/CFC"}]},
+  {num:70,nom:"Les zommes des sables",tournoi:"Élite masculin",coeff:16,joueurs:[{nom:"Chazot Lucas",niv:"National"},{nom:"Zelmire Simon",niv:"National"},{nom:"Ricca Gabriel",niv:"National"}]},
+  {num:69,nom:"Chatgpt",tournoi:"Tournoi mixte",coeff:11.33,joueurs:[{nom:"Colin Jules",niv:"Départemental"},{nom:"Saint-Michel Hugo",niv:"Régional"},{nom:"Alyssa",niv:"Régional"}]},
+  {num:68,nom:"Les bronzés sauf Ilan",tournoi:"Tournoi mixte",coeff:14.67,joueurs:[{nom:"Foulgon Chloe",niv:"Régional"},{nom:"Ilan Corroyer",niv:"National"},{nom:"Nicolas Jaeck",niv:"National"}]},
+  {num:67,nom:"BARTHIER",tournoi:"Tournoi mixte",coeff:8,joueurs:[{nom:"Franck",niv:"Loisir"},{nom:"L romain",niv:"Loisir"},{nom:"R clémence",niv:"Loisir"}]},
+  {num:66,nom:"Les légendes",tournoi:"Tournoi féminin",coeff:12,joueurs:[{nom:"Noémie farran",niv:"Régional"},{nom:"Klyana maddedu",niv:"Régional"},{nom:"Inès Rozant",niv:"Régional"}]},
+  {num:65,nom:"La Triplette",tournoi:"Loisir masculin",coeff:12,joueurs:[{nom:"CARTIER Hugo",niv:"Régional"},{nom:"BOUHADOUF Massi",niv:"Régional"},{nom:"GOMEZ Noah",niv:"Régional"}]},
+  {num:64,nom:"Les gâteaux verts",tournoi:"Tournoi jeunes",coeff:0,joueurs:[{nom:"DERAMAUDT Inès",niv:""},{nom:"DERAMAUDT Paul",niv:""},{nom:"BRUNET Nina",niv:""}]},
+  {num:63,nom:"Mangeur de bananes",tournoi:"Élite masculin",coeff:12,joueurs:[{nom:"Delporte Giulian",niv:"Régional"},{nom:"Laguarrigue lucas",niv:"Régional"},{nom:"Thermy oscar",niv:"Régional"}]},
+  {num:62,nom:"Bomboclat",tournoi:"Loisir masculin",coeff:12,joueurs:[{nom:"Mathieu",niv:"Régional"},{nom:"Martin",niv:"Régional"},{nom:"Victor",niv:"Régional"}]},
+  {num:61,nom:"C'est ça qu'est bon",tournoi:"Loisir masculin",coeff:12,joueurs:[{nom:"Bouaich Selym",niv:"Régional"},{nom:"Debagh redwan",niv:"Régional"},{nom:"Chamrouk Toufik",niv:"Régional"}]},
+  {num:60,nom:"Bouzelouf",tournoi:"Tournoi mixte",coeff:18,joueurs:[{nom:"Noa Van Caeneghem",niv:"PRO/CFC"},{nom:"Gabriel Dufflos",niv:"PRO/CFC"},{nom:"Louane Verger",niv:"PRO/CFC"}]},
+  {num:59,nom:"Babamane prime",tournoi:"Tournoi mixte",coeff:18,joueurs:[{nom:"Abdramane",niv:"PRO/CFC"},{nom:"Hallart",niv:"PRO/CFC"},{nom:"Doumenjou",niv:"PRO/CFC"}]},
+  {num:58,nom:"Bonne question",tournoi:"Tournoi mixte",coeff:14,joueurs:[{nom:"Ardo kreek",niv:"PRO/CFC"},{nom:"Griffet theo",niv:"Régional"},{nom:"Aguilera euzet",niv:"Régional"}]},
+  {num:57,nom:"C'est porté",tournoi:"Tournoi mixte",coeff:14.67,joueurs:[{nom:"Piazzeta Pedro",niv:"National"},{nom:"Wagner Lou",niv:"Régional"},{nom:"Dumortier Gabriel",niv:"National"}]},
+  {num:56,nom:"EZ WIN",tournoi:"Tournoi mixte",coeff:11.33,joueurs:[{nom:"Toupet Ewen",niv:"Régional"},{nom:"Ferkous Alicia",niv:"Départemental"},{nom:"Mrtr noé",niv:"Régional"}]},
+  {num:55,nom:"Les Poussettes",tournoi:"Tournoi mixte",coeff:8,joueurs:[{nom:"Vuillet baptiste",niv:"Loisir"},{nom:"Buonomo roland",niv:"Loisir"},{nom:"Wietrich Spano annaelle",niv:"Loisir"}]},
+  {num:54,nom:"Les Tafioles",tournoi:"Tournoi mixte",coeff:8,joueurs:[{nom:"Gaugain eric",niv:"Loisir"},{nom:"Chambourdon Thierry",niv:"Loisir"},{nom:"Massette Elia",niv:"Loisir"}]},
+  {num:53,nom:"Les loups solitaires",tournoi:"Tournoi mixte",coeff:12,joueurs:[{nom:"D acunto leo",niv:"Régional"},{nom:"Asencio jylia",niv:"Régional"},{nom:"Auffret Enzo",niv:"Régional"}]},
+  {num:52,nom:"EKIP",tournoi:"Tournoi mixte",coeff:14.67,joueurs:[{nom:"Razakandrainy Jade",niv:"National"},{nom:"Razakandrainy William",niv:"Régional"},{nom:"Vivor Nigel",niv:"National"}]},
+  {num:51,nom:"3L de Lit-bear-thé",tournoi:"Tournoi mixte",coeff:16,joueurs:[{nom:"Léanne Thomassin",niv:"National"},{nom:"Louis",niv:"National"},{nom:"Loukis",niv:"National"}]},
+  {num:50,nom:"Les sous douées",tournoi:"Tournoi jeunes",coeff:0,joueurs:[{nom:"Servel eva",niv:""},{nom:"Laurent Valentine",niv:""},{nom:"Dolci clémence",niv:""}]},
+  {num:49,nom:"Baiken et son lasseau",tournoi:"Loisir masculin",coeff:11.33,joueurs:[{nom:"Orliange maxim",niv:"Régional"},{nom:"Simon",niv:"Régional"},{nom:"Gabriel Combas",niv:"Départemental"}]},
+  {num:48,nom:"Les ventres bleus",tournoi:"Loisir masculin",coeff:8,joueurs:[{nom:"Allies Enzo",niv:"Loisir"},{nom:"Rio-Barconière Célian",niv:"Loisir"},{nom:"Briselance Lucas",niv:"Loisir"}]},
+  {num:47,nom:"Équipe 100% haram",tournoi:"Tournoi féminin",coeff:13.33,joueurs:[{nom:"Sentenac Salomé",niv:"Régional"},{nom:"Jade Vincent",niv:"National"},{nom:"BELLY Nell",niv:"Régional"}]},
+  {num:46,nom:"Ça joue très vite",tournoi:"Tournoi mixte",coeff:17.33,joueurs:[{nom:"Robin Hutrel",niv:"PRO/CFC"},{nom:"Clémence FRABOULET",niv:"National"},{nom:"XXX",niv:"PRO/CFC"}]},
+  {num:45,nom:"vamos",tournoi:"Tournoi féminin",coeff:16,joueurs:[{nom:"Mouchard Manon",niv:"National"},{nom:"Gleizes Clara",niv:"National"},{nom:"Gleizes Camille",niv:"National"}]},
+  {num:44,nom:"Faute de jeu",tournoi:"Tournoi féminin",coeff:18,joueurs:[{nom:"D'Arthur Adriana",niv:"PRO/CFC"},{nom:"Ruiz Romane",niv:"PRO/CFC"},{nom:"Martin Pauline",niv:"PRO/CFC"}]},
+  {num:43,nom:"Ez win",tournoi:"Loisir masculin",coeff:12,joueurs:[{nom:"Pascal greg",niv:"Régional"},{nom:"Boudier Georges",niv:"Régional"},{nom:"Mansour Mathias",niv:"Régional"}]},
+  {num:42,nom:"Les chipies",tournoi:"Tournoi mixte",coeff:10.67,joueurs:[{nom:"Zied Meddeb",niv:"Loisir"},{nom:"Thomas Lefebvre",niv:"Régional"},{nom:"CYPRICK Victoria",niv:"Régional"}]},
+  {num:41,nom:"Flamingos",tournoi:"Tournoi féminin",coeff:16,joueurs:[{nom:"SOULA JULIETTE",niv:"National"},{nom:"VIDALLER ORLANE",niv:"National"},{nom:"DURIS LENA",niv:"National"}]},
+  {num:40,nom:"Nikeumuk",tournoi:"Loisir masculin",coeff:13.33,joueurs:[{nom:"LENROUILLY GREGOIRE",niv:"Régional"},{nom:"ESPIE FLORIS",niv:"Régional"},{nom:"DI MARINO LUCA",niv:"National"}]},
+  {num:39,nom:"Joseph MVP",tournoi:"Élite masculin",coeff:18,joueurs:[{nom:"Arthur piazzeta",niv:"PRO/CFC"},{nom:"Matthieu Garcia",niv:"PRO/CFC"},{nom:"Corentin phelut",niv:"PRO/CFC"}]},
+  {num:38,nom:"On verra",tournoi:"Tournoi féminin",coeff:16,joueurs:[{nom:"Cuadros Romane",niv:"National"},{nom:"Caillant Lise",niv:"National"},{nom:"Jouffroy Bérangère",niv:"National"}]},
+  {num:37,nom:"l'animalerie",tournoi:"Élite masculin",coeff:16.67,joueurs:[{nom:"Pantel Golan",niv:"National"},{nom:"André Ginoulhac Téo",niv:"PRO/CFC"},{nom:"X",niv:"National"}]},
+  {num:36,nom:"Paella burrata kebab",tournoi:"Loisir masculin",coeff:12,joueurs:[{nom:"Martinez Vincent",niv:"Régional"},{nom:"Kouchkar Ali",niv:"Régional"},{nom:"Pelissier Loïs",niv:"Régional"}]},
+  {num:35,nom:"Croco smashser",tournoi:"Tournoi mixte",coeff:12,joueurs:[{nom:"Hugo VUEBAT",niv:"Régional"},{nom:"Guillaume SEVERIAN",niv:"National"},{nom:"Camille PARTAIX",niv:"Loisir"}]},
+  {num:34,nom:"NTM farfadets",tournoi:"Tournoi mixte",coeff:18,joueurs:[{nom:"Brugneaux natalia",niv:"PRO/CFC"},{nom:"Valladeau tom",niv:"PRO/CFC"},{nom:"Bezacier Maël",niv:"PRO/CFC"}]},
+  {num:33,nom:"NFL",tournoi:"Loisir masculin",coeff:12,joueurs:[{nom:"Lucas",niv:"Régional"},{nom:"Fabio",niv:"Régional"},{nom:"Nathan",niv:"Régional"}]},
+  {num:32,nom:"on est pas des connasses",tournoi:"Tournoi féminin",coeff:12,joueurs:[{nom:"lise",niv:"Régional"},{nom:"philippine",niv:"Régional"},{nom:"camille",niv:"Régional"}]},
+  {num:31,nom:"Lael arrête la couture",tournoi:"Tournoi mixte",coeff:12,joueurs:[{nom:"GRELIN Matteo",niv:"Régional"},{nom:"AYMES Nicolas",niv:"Régional"},{nom:"BERNARDINI Julie",niv:"Régional"}]},
+  {num:30,nom:"Picore Picore",tournoi:"Élite masculin",coeff:16,joueurs:[{nom:"Manresa William",niv:"National"},{nom:"Avinens Matthieu",niv:"National"},{nom:"Demarque Paul",niv:"National"}]},
+  {num:29,nom:"Les Badddiiiiiiees",tournoi:"Tournoi jeunes",coeff:0,joueurs:[{nom:"DELEURY Anaëlle",niv:""},{nom:"Faillie Rose",niv:""},{nom:"COJAN Lilou",niv:""}]},
+  {num:28,nom:"T'inquiète je gère !",tournoi:"Élite masculin",coeff:16,joueurs:[{nom:"Dojcilovic Stevo",niv:"National"},{nom:"Cojan Cyrille",niv:"National"},{nom:"Trefle Marley",niv:"National"}]},
+  {num:27,nom:"Ont mise tout sur Nael",tournoi:"Tournoi mixte",coeff:12,joueurs:[{nom:"Jeremy",niv:"Régional"},{nom:"Nael",niv:"Régional"},{nom:"Anae",niv:"Régional"}]},
+  {num:26,nom:"Margot nous sort en boîte",tournoi:"Tournoi féminin",coeff:16,joueurs:[{nom:"MEBROUK Margot",niv:"National"},{nom:"BALFET Mathilde",niv:"National"},{nom:"MALACAMP Zoé",niv:"National"}]},
+  {num:25,nom:"Spatule en feu",tournoi:"Tournoi féminin",coeff:16,joueurs:[{nom:"DOUNAT Anaïs",niv:"National"},{nom:"MAILLÉ Pauline",niv:"National"},{nom:"DE SOUSA E SILVA Luna",niv:"National"}]},
+  {num:24,nom:"Fc Hors cadre",tournoi:"Loisir masculin",coeff:9.33,joueurs:[{nom:"Eloan Catillo",niv:"Loisir"},{nom:"Teo Spagnoletti",niv:"Départemental"},{nom:"Celian",niv:"Départemental"}]},
+  {num:23,nom:"Gros biberon",tournoi:"Tournoi mixte",coeff:16,joueurs:[{nom:"Demarque Simon",niv:"National"},{nom:"Manresa loelia",niv:"National"},{nom:"Rasovski Bob",niv:"National"}]},
+  {num:22,nom:"Soliiiide",tournoi:"Tournoi mixte",coeff:16,joueurs:[{nom:"Zerbib Simon",niv:"National"},{nom:"Nadir",niv:"National"},{nom:"Marine revel",niv:"National"}]},
+  {num:21,nom:"Aura farming",tournoi:"Élite masculin",coeff:16.67,joueurs:[{nom:"Vincent-Nguyen",niv:"National"},{nom:"Simon piffeteau",niv:"PRO/CFC"},{nom:"Loris canonge",niv:"National"}]},
+  {num:20,nom:"Mas gonflate",tournoi:"Tournoi mixte",coeff:16,joueurs:[{nom:"Rossi Enio",niv:"PRO/CFC"},{nom:"Puig Titouan",niv:"PRO/CFC"},{nom:"Rossi elea",niv:"Régional"}]},
+  {num:19,nom:"Nana et les 2 autres",tournoi:"Tournoi mixte",coeff:12,joueurs:[{nom:"VILLARET  Loui",niv:"Régional"},{nom:"RUDEL Alex",niv:"Régional"},{nom:"FESQUET Anais",niv:"Régional"}]},
+  {num:18,nom:"Triple alliance",tournoi:"Tournoi féminin",coeff:14.67,joueurs:[{nom:"Malory",niv:"Régional"},{nom:"Candice",niv:"National"},{nom:"Lou-Ann",niv:"National"}]},
+  {num:17,nom:"Tanga",tournoi:"Loisir masculin",coeff:12,joueurs:[{nom:"MALHERBE Titouan",niv:"Régional"},{nom:"MAUREL Baptiste",niv:"Régional"},{nom:"GENDAZIK Sacha",niv:"Régional"}]},
+  {num:16,nom:"Bounce club",tournoi:"Élite masculin",coeff:16,joueurs:[{nom:"Gregeois Edo",niv:"National"},{nom:"Toybou Younos",niv:"National"},{nom:"Toybou Soulwan",niv:"National"}]},
+  {num:15,nom:"Ouin ouin biberon",tournoi:"Loisir masculin",coeff:12,joueurs:[{nom:"DIALLO SILVERT",niv:"Régional"},{nom:"FRAISSE Dylan",niv:"Régional"},{nom:"Simonard Gaëtan",niv:"Régional"}]},
+  {num:14,nom:"No way",tournoi:"Tournoi mixte",coeff:16,joueurs:[{nom:"Hugo rea",niv:"National"},{nom:"Lilou perez",niv:"National"},{nom:"Loris rodriguez",niv:"National"}]},
+  {num:13,nom:"Les totally spies",tournoi:"Loisir masculin",coeff:10.67,joueurs:[{nom:"Blanc gabin",niv:"Loisir"},{nom:"RABAUD Valentin",niv:"Régional"},{nom:"HARBULON Teddy",niv:"Régional"}]},
+  {num:12,nom:"tout dans le filets",tournoi:"Loisir masculin",coeff:12,joueurs:[{nom:"bastien servel",niv:"Régional"},{nom:"leo sanchez",niv:"Régional"},{nom:"mathias cappellini",niv:"Régional"}]},
+  {num:11,nom:"Les Chimpanzés",tournoi:"Tournoi mixte",coeff:9.33,joueurs:[{nom:"GIL Matteo",niv:"Loisir"},{nom:"CASTELLA Maryse",niv:"Régional"},{nom:"LASSO Mathieu",niv:"Loisir"}]},
+  {num:10,nom:"Apéro",tournoi:"Tournoi mixte",coeff:12,joueurs:[{nom:"Vavasseur thomas",niv:"Régional"},{nom:"Ben cosse",niv:"Régional"},{nom:"Vindel marion",niv:"Régional"}]},
+  {num:9,nom:"Crabes",tournoi:"Loisir masculin",coeff:12,joueurs:[{nom:"DI MARINO Marco",niv:"Régional"},{nom:"GIMONET Floriant",niv:"Régional"},{nom:"SALES Thibaut",niv:"Régional"}]},
+  {num:8,nom:"DONNE TES MAINS",tournoi:"Tournoi féminin",coeff:14.67,joueurs:[{nom:"Charlyne",niv:"Régional"},{nom:"Audrey",niv:"National"},{nom:"Julie",niv:"National"}]},
+  {num:7,nom:"Totally spies",tournoi:"Tournoi féminin",coeff:10,joueurs:[{nom:"Melany Miranda Da Cruz",niv:"Départemental"},{nom:"Jalane Devos",niv:"Départemental"},{nom:"Lison Reyne",niv:"Départemental"}]},
+  {num:6,nom:"Beta 50 a vendre",tournoi:"Tournoi mixte",coeff:12,joueurs:[{nom:"Laimeche Kelian",niv:"Régional"},{nom:"Girynowicz Kyllian",niv:"Régional"},{nom:"Blanc Marie",niv:"Régional"}]},
+  {num:5,nom:"Pilé",tournoi:"Tournoi féminin",coeff:18,joueurs:[{nom:"Chloé Dauga",niv:"PRO/CFC"},{nom:"Noa Randrianantenaina",niv:"PRO/CFC"},{nom:"Mina Gatabazi",niv:"PRO/CFC"}]},
+  {num:4,nom:"Ahrr zebi",tournoi:"Tournoi mixte",coeff:14.67,joueurs:[{nom:"Morel Juliana",niv:"National"},{nom:"Matheo",niv:"Régional"},{nom:"Sacha",niv:"National"}]},
+  {num:3,nom:"Charline34",tournoi:"Loisir masculin",coeff:12,joueurs:[{nom:"BENGOUDIFA Mohamed",niv:"Régional"},{nom:"Lael",niv:"Régional"},{nom:"Swan",niv:"Régional"}]},
+  {num:2,nom:"MST",tournoi:"Élite masculin",coeff:18,joueurs:[{nom:"MISTOCO Timéo",niv:"PRO/CFC"},{nom:"PIFFETEAU Simon",niv:"PRO/CFC"},{nom:"BEVILACQUA Matis",niv:"PRO/CFC"}]},
+  {num:1,nom:"Boubaka",tournoi:"Élite masculin",coeff:18,joueurs:[{nom:"Barbier Wayan",niv:"PRO/CFC"},{nom:"Capet Romain",niv:"PRO/CFC"},{nom:"Rajoharivelo Pépin",niv:"PRO/CFC"}]},
+];
+
+const TOURNOI_NAMES = { jeunes:"Tournoi jeunes", mixte:"Tournoi mixte", feminin:"Tournoi féminin", loisir:"Loisir masculin", elite:"Élite masculin" };
+const TOURNOI_CFG = {
+  jeunes: {label:"🔵 Tournoi Jeunes", tag:"Jeunes", tagBg:"#dbeafe", tagColor:"#1d4ed8"},
+  mixte:  {label:"🟠 Tournoi Mixte",  tag:"Mixte",  tagBg:"#fed7aa", tagColor:"#9a3412"},
+  feminin:{label:"🌸 Tournoi Féminin",tag:"Féminin",tagBg:"#fce7f3", tagColor:"#9d174d"},
+  loisir: {label:"🔵 Loisir Masc.",   tag:"Loisir", tagBg:"#dbeafe", tagColor:"#1d4ed8"},
+  elite:  {label:"⭐ Élite Masc.",    tag:"Élite",  tagBg:"#ede9fe", tagColor:"#5b21b6"},
+};
+
+const FB_URL = 'https://green-arago-sete-2026-default-rtdb.europe-west1.firebasedatabase.app/tournoi2026';
+
+// ===== STATE =====
+var state = { poules:{}, scores:{}, config:{}, elimScores:{}, customTeams:[], deletedTeams:[] };
+var currentT = null, currentPhase = 'phase1';
+var lastUpdate = null;
+
+// ===== HELPERS =====
+function getAllTeams() {
+  var deleted = state.deletedTeams || [];
+  var custom = state.customTeams || [];
+  var overrides = custom.filter(function(t){ return t && t.isOverride; }).map(function(t){ return t.num; });
+  var base = TEAMS_DATA.filter(function(t){ return !deleted.includes(t.num) && !overrides.includes(t.num); });
+  var all = base.concat(custom.filter(function(t){ return t && t.num; }));
+  return all.sort(function(a,b){ return a.num - b.num; });
+}
+function getTeamByNum(num) { return getAllTeams().find(function(t){ return t.num === num; }) || null; }
+function getTeamsForT(t) {
+  var name = TOURNOI_NAMES[t];
+  return getAllTeams().filter(function(tm){ return tm.tournoi.toLowerCase() === name.toLowerCase(); });
+}
+function getMatchPairs(size) {
+  if(size===3) return [['A','B'],['A','C'],['B','C']];
+  if(size===4) return [['A','B'],['C','D'],['A','C'],['B','D'],['A','D'],['B','C']];
+  if(size===5) return [['A','B'],['C','D'],['A','E'],['B','C'],['D','E'],['A','C'],['B','E'],['A','D'],['C','E'],['B','D']];
+  return [];
+}
+function computeStandings(T, pKey, size, isElim) {
+  var letters = ['A','B','C','D','E'].slice(0,size);
+  var pairs = getMatchPairs(size);
+  var stats = {};
+  letters.forEach(function(l){ stats[l]={wins:0,diff:0}; });
+  var pre = isElim ? (T+'_'+pKey) : (T+'_phase1_'+pKey);
+  pairs.forEach(function(pair,mi){
+    var sc = state.scores[pre+'_m'+mi];
+    if(!sc||sc.home===''||sc.away==='') return;
+    var h=parseInt(sc.home), a=parseInt(sc.away);
+    if(isNaN(h)||isNaN(a)) return;
+    if(h>a) stats[pair[0]].wins++; else if(a>h) stats[pair[1]].wins++;
+    stats[pair[0]].diff+=(h-a); stats[pair[1]].diff+=(a-h);
+  });
+  return letters.map(function(l){
+    var num=parseInt(state.poules[(isElim?(T+'_'+pKey):(T+'_phase1_'+pKey))+'_'+l]);
+    var team=getTeamByNum(num);
+    return {l:l,team:team,wins:stats[l].wins,diff:stats[l].diff,coeff:team?team.coeff:0};
+  }).sort(function(a,b){ return b.wins-a.wins||b.diff-a.diff||b.coeff-a.coeff; });
+}
+function lvClass(niv) {
+  var n=(niv||'').toLowerCase();
+  if(n.includes('pro')||n.includes('cfc')) return 'lv-pro';
+  if(n.includes('national')) return 'lv-nat';
+  if(n.includes('régional')||n.includes('regional')) return 'lv-reg';
+  if(n.includes('départemental')||n.includes('departemental')) return 'lv-dep';
+  return '';
+}
+
+// ===== FIREBASE =====
+function loadData() {
+  fetch(FB_URL+'.json', {cache:'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data) {
+        var toArr = function(v){ if(!v) return []; if(Array.isArray(v)) return v.filter(Boolean); if(typeof v==='object') return Object.values(v).filter(Boolean); return []; };
+        state.poules      = data.poules      || {};
+        state.scores      = data.scores      || {};
+        state.config      = data.config      || {};
+        state.elimScores  = data.elimScores  || {};
+        state.customTeams = toArr(data.customTeams);
+        state.deletedTeams= toArr(data.deletedTeams);
+      }
+      lastUpdate = new Date();
+      updateStatus(true);
+      refreshUI();
+    })
+    .catch(function(){ updateStatus(false); });
+}
+
+function updateStatus(ok) {
+  var sub = document.getElementById('headerSub');
+  var dot = document.getElementById('liveDot');
+  if(ok) {
+    dot.style.background = '#86efac';
+    sub.textContent = 'En direct · Mis à jour ' + (lastUpdate ? lastUpdate.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '');
+  } else {
+    dot.style.background = '#fca5a5';
+    sub.textContent = 'Hors ligne — dernière sync ' + (lastUpdate ? lastUpdate.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : 'jamais');
+  }
+}
+
+// Rafraîchissement toutes les 10 secondes
+setInterval(loadData, 10000);
+
+// ===== ROUTING =====
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(function(el){ el.classList.remove('active'); });
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('btn-'+p).classList.add('active');
+  if(p==='equipes') renderEquipes();
+}
+
+function refreshUI() {
+  if(currentT) renderTournoi();
+  if(document.getElementById('page-equipes').classList.contains('active')) renderEquipes();
+}
+
+// ===== TOURNOI =====
+function selectT(t) {
+  currentT = t;
+  currentPhase = 'phase1';
+  document.querySelectorAll('.t-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('.t-btn.'+t).forEach(function(b){ b.classList.add('active'); });
+  renderTournoi();
+}
+
+function renderTournoi() {
+  if(!currentT) return;
+  var T = currentT;
+  var cfg = TOURNOI_CFG[T];
+
+  var phasesHtml = ['phase1','principal','consolante'].map(function(ph){
+    var lbl = ph==='phase1'?'1ère Phase':ph==='principal'?'🏆 Principal':'🥈 Consolante';
+    return '<button class="phase-tab '+(ph===currentPhase?'active':'')+'" onclick="selPhase(\''+ph+'\')">' + lbl + '</button>';
+  }).join('');
+
+  var content = '<div class="phase-tabs">' + phasesHtml + '</div>';
+  content += '<div style="font-size:14px;font-weight:700;color:var(--green-dark);margin-bottom:12px">' + cfg.label + '</div>';
+
+  if(currentPhase === 'phase1') {
+    content += renderPhase1View(T);
+  } else {
+    content += renderElimView(T, currentPhase);
+  }
+
+  document.getElementById('tournoiContent').innerHTML = content;
+}
+
+function selPhase(ph) {
+  currentPhase = ph;
+  renderTournoi();
+}
+
+function renderPhase1View(T) {
+  var nb3=parseInt(state.config[T+'_phase1_nb3']||0);
+  var nb4=parseInt(state.config[T+'_phase1_nb4']||0);
+  var nb5=parseInt(state.config[T+'_phase1_nb5']||0);
+  var total = nb3+nb4+nb5;
+
+  if(total===0) return '<div class="empty"><div class="big">⏳</div>Les poules ne sont pas encore configurées.</div>';
+
+  var html = '';
+  var idx = 0;
+
+  function addPoules(nb, size) {
+    for(var i=0;i<nb;i++) {
+      idx++;
+      var pKey='p'+idx;
+      var letters=['A','B','C','D','E'].slice(0,size);
+      var pairs=getMatchPairs(size);
+      var prefix=T+'_phase1_'+pKey;
+      var standings=computeStandings(T,pKey,size,false);
+      var rankCls=['r1','r2','r3','rn','rn'];
+
+      html += '<div class="poule-block">';
+      var terrainPoule = state.poules[T+'_phase1_'+pKey+'_terrain']||'';
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
+      html += '<div class="poule-title">POULE ' + idx + '</div>';
+      if(terrainPoule) html += '<span style="font-size:12px;font-weight:700;background:#f0fdf4;color:#14532d;padding:4px 10px;border-radius:10px;border:1px solid #a7f3d0">🏟️ Terrain ' + terrainPoule + '</span>';
+      html += '</div>';
+
+      // Matchs
+      var hasMatches = false;
+      var matchHtml = '';
+      pairs.forEach(function(pair, mi) {
+        var sc = state.scores[prefix+'_m'+mi]||{home:'',away:''};
+        var tA = getTeamByNum(parseInt(state.poules[prefix+'_'+pair[0]]));
+        var tB = getTeamByNum(parseInt(state.poules[prefix+'_'+pair[1]]));
+        var nA = tA ? tA.nom.substring(0,18) : 'Éq.'+pair[0];
+        var nB = tB ? tB.nom.substring(0,18) : 'Éq.'+pair[1];
+        var h=parseInt(sc.home), a=parseInt(sc.away);
+        var played = sc.home!==''&&sc.away!==''&&!isNaN(h)&&!isNaN(a);
+        var winA=played&&h>a, winB=played&&a>h;
+        hasMatches = true;
+        matchHtml += '<div class="match-row">';
+        matchHtml += '<div class="match-teams"><div class="match-name '+(winA?'winner':'')+'">' + nA + '</div><div class="match-name '+(winB?'winner':'')+'">' + nB + '</div></div>';
+        if(played) {
+          matchHtml += '<span class="score-badge '+(winA?'winner':'')+'">' + sc.home + '</span>';
+          matchHtml += '<span class="score-sep">–</span>';
+          matchHtml += '<span class="score-badge '+(winB?'winner':'')+'">' + sc.away + '</span>';
+        } else {
+          matchHtml += '<span class="pending">À jouer</span>';
+        }
+        matchHtml += '</div>';
+      });
+      if(matchHtml) html += matchHtml;
+
+      // Classement
+      html += '<table class="rank-table" style="margin-top:12px"><thead><tr><th>#</th><th>Équipe</th><th>V</th><th>Diff</th></tr></thead><tbody>';
+      standings.forEach(function(r,i){
+        var name = r.team ? r.team.nom.substring(0,18) : 'Éq.'+r.l;
+        html += '<tr><td><span class="rank-badge '+rankCls[i]+'">'+(i+1)+'</span></td>';
+        html += '<td style="font-weight:600;font-size:12px">'+name+'</td>';
+        html += '<td style="font-weight:800;color:var(--green)">'+r.wins+'</td>';
+        html += '<td style="color:'+(r.diff>0?'var(--green)':r.diff<0?'#dc2626':'var(--muted)')+';">'+(r.diff>0?'+':'')+r.diff+'</td></tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+  }
+
+  addPoules(nb3,3); addPoules(nb4,4); addPoules(nb5,5);
+  return html;
+}
+
+function renderElimView(T, ph) {
+  // Poules de la phase éliminatoire
+  var phKey = ph;
+  var nb3=parseInt(state.config[T+'_'+phKey+'_nb3']||0);
+  var nb4=parseInt(state.config[T+'_'+phKey+'_nb4']||0);
+  var nb5=parseInt(state.config[T+'_'+phKey+'_nb5']||0);
+
+  var html = '';
+
+  // Poules si configurées
+  if(nb3+nb4+nb5 > 0) {
+    html += '<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:10px">Poules de phase</div>';
+    var idx=0;
+    function addElimPoules(nb,size){
+      for(var i=0;i<nb;i++){
+        idx++;
+        var pKey='p'+idx;
+        var letters=['A','B','C','D','E'].slice(0,size);
+        var pairs=getMatchPairs(size);
+        var prefix=T+'_'+ph+'_'+pKey;
+        var standings=computeStandings(T,ph+'_'+pKey,size,true);
+        var rankCls=['r1','r2','r3','rn','rn'];
+
+        html += '<div class="poule-block"><div class="poule-title">POULE '+idx+'</div>';
+        pairs.forEach(function(pair,mi){
+          var sc=state.scores[prefix+'_m'+mi]||{home:'',away:''};
+          var tA=getTeamByNum(parseInt(state.poules[prefix+'_'+pair[0]]));
+          var tB=getTeamByNum(parseInt(state.poules[prefix+'_'+pair[1]]));
+          var nA=tA?tA.nom.substring(0,18):'Éq.'+pair[0];
+          var nB=tB?tB.nom.substring(0,18):'Éq.'+pair[1];
+          var h=parseInt(sc.home),a=parseInt(sc.away);
+          var played=sc.home!==''&&sc.away!==''&&!isNaN(h)&&!isNaN(a);
+          var winA=played&&h>a,winB=played&&a>h;
+          html+='<div class="match-row"><div class="match-teams"><div class="match-name '+(winA?'winner':'')+'">' +nA+'</div><div class="match-name '+(winB?'winner':'')+'">' +nB+'</div></div>';
+          if(played){html+='<span class="score-badge '+(winA?'winner':'')+'">' +sc.home+'</span><span class="score-sep">–</span><span class="score-badge '+(winB?'winner':'')+'">' +sc.away+'</span>';}
+          else{html+='<span class="pending">À jouer</span>';}
+          html+='</div>';
+        });
+        html+='<table class="rank-table" style="margin-top:10px"><thead><tr><th>#</th><th>Équipe</th><th>V</th><th>Diff</th></tr></thead><tbody>';
+        standings.forEach(function(r,i){
+          var name=r.team?r.team.nom.substring(0,18):'Éq.'+r.l;
+          html+='<tr><td><span class="rank-badge '+rankCls[i]+'">'+(i+1)+'</span></td><td style="font-weight:600;font-size:12px">'+name+'</td><td style="font-weight:800;color:var(--green)">'+r.wins+'</td><td style="color:'+(r.diff>0?'var(--green)':r.diff<0?'#dc2626':'var(--muted)')+';">'+(r.diff>0?'+':'')+r.diff+'</td></tr>';
+        });
+        html+='</tbody></table></div>';
+      }
+    }
+    addElimPoules(nb3,3); addElimPoules(nb4,4); addElimPoules(nb5,5);
+  }
+
+  // Tableau éliminatoire (bracket)
+  var ROUNDS = [
+    {label:'1/8 de finale', count:8, start:0},
+    {label:'Quarts de finale', count:4, start:8},
+    {label:'Demi-finales', count:2, start:12},
+    {label:'Finale', count:1, start:14},
+  ];
+
+  html += '<div style="margin-top:16px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:10px">Tableau éliminatoire</div>';
+
+  var hasAnyMatch = false;
+  ROUNDS.forEach(function(round) {
+    var roundHtml = '';
+    for(var i=0; i<round.count; i++) {
+      var mi = round.start + i;
+      var k1 = T+'_'+ph+'_br_t1_'+mi;
+      var k2 = T+'_'+ph+'_br_t2_'+mi;
+      var kw = T+'_'+ph+'_br_win_'+mi;
+      var t1num = parseInt(state.poules[k1]);
+      var t2num = parseInt(state.poules[k2]);
+      var winnum = parseInt(state.poules[kw]);
+      var t1 = getTeamByNum(t1num);
+      var t2 = getTeamByNum(t2num);
+      var winner = getTeamByNum(winnum);
+      var kt = T+'_'+ph+'_br_terrain_'+mi;
+      var terrainMatch = state.poules[kt]||'';
+      if(!t1 && !t2) continue;
+      hasAnyMatch = true;
+      var played = !!winner;
+      roundHtml += '<div class="bracket-match '+(played?'played':'')+'">';
+      if(terrainMatch) roundHtml += '<div style="font-size:10px;font-weight:700;background:#f0fdf4;color:#14532d;padding:3px 8px;border-radius:8px;margin-bottom:6px;display:inline-block">🏟️ Terrain ' + terrainMatch + '</div>';
+      roundHtml += '<div class="bracket-team '+(winner&&t1&&winner.num===t1.num?'winner':'')+'">';
+      roundHtml += '<span>'+(t1?t1.nom.substring(0,22):'<span class="tbd">À déterminer</span>')+'</span>';
+      roundHtml += '</div>';
+      roundHtml += '<div class="bracket-team '+(winner&&t2&&winner.num===t2.num?'winner':'')+'">';
+      roundHtml += '<span>'+(t2?t2.nom.substring(0,22):'<span class="tbd">À déterminer</span>')+'</span>';
+      roundHtml += '</div>';
+      if(winner) roundHtml += '<div style="font-size:11px;color:var(--green);font-weight:700;margin-top:6px;text-align:center">✅ '+winner.nom+'</div>';
+      roundHtml += '</div>';
+    }
+    if(roundHtml) {
+      var isFin = round.label==='Finale';
+      html += '<div class="round-title">'+(isFin?'🏆 ':'')+round.label+'</div>' + roundHtml;
+    }
+  });
+
+  if(!hasAnyMatch) {
+    html += '<div class="empty"><div class="big">⏳</div>Le tableau éliminatoire n\'est pas encore commencé.</div>';
+  }
+
+  // Champion
+  var finWin = getTeamByNum(parseInt(state.poules[T+'_'+ph+'_br_win_14']));
+  if(finWin) {
+    var trophy = ph==='principal'?'🏆':'🥈';
+    html += '<div class="champion"><div class="trophy">'+trophy+'</div>';
+    html += '<div class="label">'+(ph==='principal'?'Champion du tournoi':'Vainqueur consolante')+'</div>';
+    html += '<div class="name">'+finWin.nom+'</div>';
+    html += '<div style="font-size:12px;color:#b45309;margin-top:4px">Équipe #'+finWin.num+'</div></div>';
+  }
+
+  return html || '<div class="empty"><div class="big">⏳</div>Phase pas encore commencée.</div>';
+}
+
+// ===== ÉQUIPES =====
+function renderEquipes() {
+  var search = (document.getElementById('searchInput').value||'').toLowerCase();
+  var teams = getAllTeams().filter(function(t){
+    return !search || t.nom.toLowerCase().includes(search) || t.joueurs.some(function(j){ return j.nom.toLowerCase().includes(search); });
+  });
+  var tMap = {'tournoi jeunes':'jeunes','tournoi mixte':'mixte','tournoi féminin':'feminin','loisir masculin':'loisir','élite masculin':'elite'};
+  var html = '<div style="font-size:12px;color:var(--muted);margin-bottom:10px">'+teams.length+' équipe'+(teams.length>1?'s':'')+'</div>';
+  teams.forEach(function(t){
+    var tKey = tMap[t.tournoi.toLowerCase()]||'mixte';
+    var cfg = TOURNOI_CFG[tKey];
+    html += '<div class="team-card"><div class="team-header">';
+    html += '<div><div class="team-name">'+t.nom+'</div><div class="team-num">#'+t.num+' · Coeff '+t.coeff+'</div></div>';
+    html += '<span class="t-tag" style="background:'+cfg.tagBg+';color:'+cfg.tagColor+'">'+cfg.tag+'</span>';
+    html += '</div>';
+    t.joueurs.forEach(function(j){
+      html += '<div class="player">'+j.nom+(j.niv?'<span class="lv '+lvClass(j.niv)+'">'+j.niv+'</span>':'')+'</div>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('equipesContent').innerHTML = html;
+}
+
+// ===== INIT =====
+loadData();
+</script>
+</body>
+</html>
