@@ -489,7 +489,12 @@ function renderElimView(T, ph) {
         var standings=computeStandings(T,ph+'_'+pKey,size,true);
         var rankCls=['r1','r2','r3','rn','rn'];
 
-        html += '<div class="poule-block"><div class="poule-title">POULE '+idx+'</div>';
+        html += '<div class="poule-block">';
+        var terrainElim = state.poules[T+'_'+ph+'_'+pKey+'_terrain']||'';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
+        html += '<div class="poule-title">POULE '+idx+'</div>';
+        if(terrainElim) html += '<span style="font-size:12px;font-weight:700;background:#f0fdf4;color:#14532d;padding:4px 10px;border-radius:10px;border:1px solid #a7f3d0">🏟️ Terrain ' + terrainElim + '</span>';
+        html += '</div>';
         pairs.forEach(function(pair,mi){
           var sc=state.scores[prefix+'_m'+mi]||{home:'',away:''};
           var tA=getTeamByNum(parseInt(state.poules[prefix+'_'+pair[0]]));
